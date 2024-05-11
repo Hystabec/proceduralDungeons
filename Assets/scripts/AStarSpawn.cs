@@ -95,9 +95,77 @@ public class AStarSpawn : MonoBehaviour
     List<DungeonRoom> placedRooms = new();
     prioSortList sortedGrid = new();
 
+    List<GameObject> thisRooms = new();
+
     Vector3 spawnOffset = Vector3.zero;
 
     //List<List<GridCell>> dungeonGrid;
+
+    private void Reset()
+    {
+        dungeonCells.Clear();
+        
+        foreach(GameObject go in thisRooms)
+        {
+            Destroy(go);
+        }
+
+        placedRooms = new();
+        sortedGrid = new();
+
+        dungeonCells = new List<GridCell>();
+
+        //loops over all elements in the grid and sets them to false
+        for (int y = 0; y < dungeonHeight; y++)
+        {
+            for (int x = 0; x < dungeonWidth; x++)
+            {
+                dungeonCells.Add(new GridCell());
+            }
+        }
+
+        if (useStartCellAsWorldStartLocation)
+            spawnOffset = new Vector3(startGridCell.x * widthOfPrefab, startGridCell.y * heightOfPrefab);
+
+        //looping over grid and assiging neighbours
+        for (int y = 0; y < dungeonHeight; y++)
+        {
+            for (int x = 0; x < dungeonWidth; x++)
+            {
+                var cell = dungeonCells[x + (y * dungeonWidth)];
+                cell.worldLocation = (new Vector3((x * widthOfPrefab) + StartWorldLocation.x, (y * heightOfPrefab) + StartWorldLocation.y, (cell.worldLocation.z) + StartWorldLocation.z));
+
+                cell.x = x;
+                cell.y = y;
+
+                //left
+                if (x > 0)
+                {
+                    cell.neighbours.Add(dungeonCells[(x - 1) + (y * dungeonWidth)]);
+                }
+
+                //right
+                if (x < dungeonWidth - 1)
+                {
+                    cell.neighbours.Add(dungeonCells[(x + 1) + (y * dungeonWidth)]);
+                }
+
+                //up
+                if (y > 0)
+                {
+                    cell.neighbours.Add(dungeonCells[x + ((y - 1) * dungeonWidth)]);
+                }
+
+                //down
+                if (y < dungeonHeight - 1)
+                {
+                    cell.neighbours.Add(dungeonCells[x + ((y + 1) * dungeonWidth)]);
+                }
+            }
+        }
+
+        GenerateLayout();
+    }
 
     void Start()
     {
@@ -248,6 +316,7 @@ public class AStarSpawn : MonoBehaviour
             if(reRoom == null)
             {
                 GameObject newRoom = Instantiate(roomPrefab, new Vector3((currentRoom.asCell.x + placedDir.x) * widthOfPrefab, (currentRoom.asCell.y + placedDir.y) * heightOfPrefab, currentRoom.asCell.worldLocation.z) - spawnOffset, quaternion.identity);
+                thisRooms.Add(newRoom);
 
                 newRoom.name = "DrunkMan's room";
 
@@ -396,13 +465,12 @@ public class AStarSpawn : MonoBehaviour
             }
 
             path.Add(tempCell);
-            //path.Reverse();
         }
 
         for(int index = 0; index < path.Count; index++)
         {
             var newRoom = Instantiate(roomPrefab, path[index].worldLocation - spawnOffset, quaternion.identity);
-            newRoom.name = "pathRoom";
+            thisRooms.Add(newRoom);
 
             var temp = new DungeonRoom(path[index], newRoom);
             placedRooms.Add(temp);
@@ -463,6 +531,14 @@ public class AStarSpawn : MonoBehaviour
         for(int i = 1; i < path.Count-1; i++)
         {
             DrunkMans(placedRooms, i);
+        }
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyUp(KeyCode.Space))
+        {
+            Reset();
         }
     }
 }
