@@ -253,7 +253,7 @@ public class AStarSpawn : MonoBehaviour
 
                 var newCell = new GridCell
                 {
-                    worldLocation = newRoom.transform.position,
+                    worldLocation = newRoom.transform.position + spawnOffset,
                     x = currentRoom.asCell.x + placedDir.x,
                     y = currentRoom.asCell.y + placedDir.y
                 };
@@ -263,10 +263,10 @@ public class AStarSpawn : MonoBehaviour
 
                 sortedGrid.Add(newDungeonRoom);
 
-                Vector3 Dir = newDungeonRoom.asCell.worldLocation - currentRoom.asCell.worldLocation;
+                Vector3 Dir = (newDungeonRoom.asCell.worldLocation) - (currentRoom.asCell.worldLocation);
                 openRoomDoor(currentRoom.asGameObject, Dir);
 
-                Dir = currentRoom.asCell.worldLocation - newDungeonRoom.asCell.worldLocation;
+                Dir = (currentRoom.asCell.worldLocation) - newDungeonRoom.asCell.worldLocation;
                 openRoomDoor(newDungeonRoom.asGameObject, Dir);
 
                 currentRoom = newDungeonRoom;
