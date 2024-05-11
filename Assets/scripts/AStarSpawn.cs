@@ -534,6 +534,7 @@ public class AStarSpawn : MonoBehaviour
         }
     }
 
+
     private void Update()
     {
         if(Input.GetKeyUp(KeyCode.Space))

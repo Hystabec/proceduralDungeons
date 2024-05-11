@@ -153,16 +153,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   StartWorldLocation: {x: 0, y: 0, z: 0}
-  startGridCell: {x: 0, y: 0}
-  endGridCell: {x: 17, y: 12}
+  useStartCellAsWorldStartLocation: 1
+  startGridCell: {x: 20, y: 20}
+  endGridCell: {x: 24, y: 24}
   RandomEndCell: 1
   roomPrefab: {fileID: 2783525562792059652, guid: 1ec2239248249034ca260847811a094c, type: 3}
   widthOfPrefab: 1
   heightOfPrefab: 1
-  dungeonWidth: 20
-  dungeonHeight: 20
+  dungeonWidth: 40
+  dungeonHeight: 40
   DM_MaxChanceOfPlacingARoom: 1
-  DM_ChanceDecrease: 0.05
+  DM_ChanceDecrease: 0.01
 --- !u!4 &28238238
 Transform:
   m_ObjectHideFlags: 0
