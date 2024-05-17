@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 28238238}
   - component: {fileID: 28238237}
+  - component: {fileID: 28238239}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -147,7 +148,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 28238236}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5567c0dcaf7fe8d4c8463e7bba31a9eb, type: 3}
   m_Name: 
@@ -179,6 +180,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &28238239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 28238236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e86149d22fb0b464b9e834f3427e4dad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dungeonRoomPrefab: {fileID: 2783525562792059652, guid: 1ec2239248249034ca260847811a094c, type: 3}
+  widthOfPrefab: 1
+  heightOfPrefab: 1
+  useCustomStartLocation: 0
+  customStartLocation: {x: 0, y: 0, z: 0}
+  maxDepth: 50
+  minDepth: 25
+  ChanceToMergeRooms: 0.2
+  DefaultBranchVitality: 0.5
+  BranchVitalityDecrease: 0.05
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

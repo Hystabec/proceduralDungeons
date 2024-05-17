@@ -5,65 +5,7 @@ using System.IO;
 using Unity.Mathematics;
 using UnityEngine;
 
-class GVec
-{
-    public int x, y;
 
-    public GVec()
-    {
-        x = 0; y = 0;
-    }
-
-    public GVec(int x, int y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-
-    public GVec(int x)
-    {
-        this.x = x;
-        this.y = x;
-    }
-}
-
-public class GridCell
-{
-    public GridCell parent;
-    public List<GridCell> neighbours;
-    public Vector3 worldLocation;
-
-    public float g, h;
-
-    public int x, y;
-
-    public float GetCost()
-    {
-        return g + h;
-    }
-
-    public GridCell()
-    {
-        parent = null;
-        neighbours = new List<GridCell>();
-        g = int.MaxValue / 2;
-        h = int.MaxValue / 2;
-        worldLocation = new Vector3();
-        x = -1; y = -1;
-    }
-}
-
-public class DungeonRoom
-{
-    public GridCell asCell = null;
-    public GameObject asGameObject = null;
-
-    public DungeonRoom(GridCell asCell, GameObject asGameObject)
-    {
-        this.asCell = asCell;
-        this.asGameObject = asGameObject;
-    }
-}
 
 public class AStarSpawn : MonoBehaviour
 {
@@ -135,8 +77,7 @@ public class AStarSpawn : MonoBehaviour
                 var cell = dungeonCells[x + (y * dungeonWidth)];
                 cell.worldLocation = (new Vector3((x * widthOfPrefab) + StartWorldLocation.x, (y * heightOfPrefab) + StartWorldLocation.y, (cell.worldLocation.z) + StartWorldLocation.z));
 
-                cell.x = x;
-                cell.y = y;
+                cell.Vec = new(x, y);
 
                 //left
                 if (x > 0)
@@ -191,8 +132,7 @@ public class AStarSpawn : MonoBehaviour
                 var cell = dungeonCells[x + (y * dungeonWidth)];
                 cell.worldLocation = (new Vector3((x * widthOfPrefab)+StartWorldLocation.x, (y * heightOfPrefab)+StartWorldLocation.y, (cell.worldLocation.z)+StartWorldLocation.z));
 
-                cell.x = x;
-                cell.y = y;
+                cell.Vec = new(x, y);
 
                 //left
                 if(x > 0)
@@ -233,7 +173,7 @@ public class AStarSpawn : MonoBehaviour
         }
     }
 
-    GridCell FindCell(GVec cellLoc)
+    GridCell FindCell(GridVector cellLoc)
     {
         if(cellLoc.x > dungeonWidth || cellLoc.x < 0 || cellLoc.y > dungeonHeight || cellLoc.y < 0)
             return null;
@@ -311,11 +251,11 @@ public class AStarSpawn : MonoBehaviour
             }
 
             //find if there is a room there
-            var reRoom = sortedGrid.Find(new(currentRoom.asCell.x + placedDir.x, currentRoom.asCell.y + placedDir.y));
+            var reRoom = sortedGrid.Find(new(currentRoom.asCell.Vec.x + placedDir.x, currentRoom.asCell.Vec.y + placedDir.y));
 
             if(reRoom == null)
             {
-                GameObject newRoom = Instantiate(roomPrefab, new Vector3((currentRoom.asCell.x + placedDir.x) * widthOfPrefab, (currentRoom.asCell.y + placedDir.y) * heightOfPrefab, currentRoom.asCell.worldLocation.z) - spawnOffset, quaternion.identity);
+                GameObject newRoom = Instantiate(roomPrefab, new Vector3((currentRoom.asCell.Vec.x + placedDir.x) * widthOfPrefab, (currentRoom.asCell.Vec.y + placedDir.y) * heightOfPrefab, currentRoom.asCell.worldLocation.z) - spawnOffset, quaternion.identity);
                 thisRooms.Add(newRoom);
 
                 newRoom.name = "DrunkMan's room";
@@ -323,8 +263,7 @@ public class AStarSpawn : MonoBehaviour
                 var newCell = new GridCell
                 {
                     worldLocation = newRoom.transform.position + spawnOffset,
-                    x = currentRoom.asCell.x + placedDir.x,
-                    y = currentRoom.asCell.y + placedDir.y
+                    Vec  =  new(currentRoom.asCell.Vec.x + placedDir.x, currentRoom.asCell.Vec.y + placedDir.y)
                 };
                 newCell.neighbours.Add(currentRoom.asCell);
 
@@ -355,14 +294,14 @@ public class AStarSpawn : MonoBehaviour
 
     void GenerateLayout()
     {
-        GVec start = new GVec(startGridCell.x, startGridCell.y);
+        GridVector start = new GridVector(startGridCell.x, startGridCell.y);
 
-        GVec end;
+        GridVector end;
 
         if (!RandomEndCell)
-            end = new GVec(endGridCell.x, endGridCell.y);
+            end = new GridVector(endGridCell.x, endGridCell.y);
         else
-            end = new GVec(UnityEngine.Random.Range(0, dungeonWidth), UnityEngine.Random.Range(0, dungeonHeight));
+            end = new GridVector(UnityEngine.Random.Range(0, dungeonWidth), UnityEngine.Random.Range(0, dungeonHeight));
 
         //check cells are in grid
         if(start.x < 0)
@@ -423,7 +362,7 @@ public class AStarSpawn : MonoBehaviour
         {
             var current = openList.Top();
 
-            if(current.x == endCell.x && current.y == endCell.y)
+            if(current.Vec.x == endCell.Vec.x && current.Vec.y == endCell.Vec.y)
             {
                 pathEnd = current;
                 break;

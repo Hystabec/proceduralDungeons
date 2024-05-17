@@ -66,7 +66,7 @@ public class prioSortList
             cellList[0].roomList.Add(null);
         }
 
-        while(cell.asCell.x < XMinIndex)
+        while(cell.asCell.Vec.x < XMinIndex)
         {
             var temp = new yList();
             temp.roomList.Add(null);
@@ -75,7 +75,7 @@ public class prioSortList
             XindexForZero++;
         }
 
-        while(cell.asCell.x > XMaxIndex)
+        while(cell.asCell.Vec.x > XMaxIndex)
         {
             var temp = new yList();
             temp.roomList.Add(null);
@@ -83,27 +83,27 @@ public class prioSortList
             XMaxIndex++;
         }
 
-        while(cell.asCell.y < cellList[XindexForZero + cell.asCell.x].YMinIndex)
+        while(cell.asCell.Vec.y < cellList[XindexForZero + cell.asCell.Vec.x].YMinIndex)
         {
-            cellList[XindexForZero+cell.asCell.x].roomList.Insert(0, null);
-            cellList[XindexForZero + cell.asCell.x].YMinIndex--;
-            cellList[XindexForZero + cell.asCell.x].YindexForZero++;
+            cellList[XindexForZero+cell.asCell.Vec.x].roomList.Insert(0, null);
+            cellList[XindexForZero + cell.asCell.Vec.x].YMinIndex--;
+            cellList[XindexForZero + cell.asCell.Vec.x].YindexForZero++;
         }
 
-        while(cell.asCell.y > cellList[XindexForZero + cell.asCell.x].YMaxIndex)
+        while(cell.asCell.Vec.y > cellList[XindexForZero + cell.asCell.Vec.x].YMaxIndex)
         {
-            cellList[XindexForZero + cell.asCell.x].roomList.Add(null);
-            cellList[XindexForZero + cell.asCell.x].YMaxIndex++;
+            cellList[XindexForZero + cell.asCell.Vec.x].roomList.Add(null);
+            cellList[XindexForZero + cell.asCell.Vec.x].YMaxIndex++;
         }
 
-        var tempIndexFromZero = cellList[XindexForZero + cell.asCell.x].YindexForZero;
-        cellList[XindexForZero + cell.asCell.x].roomList[tempIndexFromZero + cell.asCell.y] = cell;
+        var tempIndexFromZero = cellList[XindexForZero + cell.asCell.Vec.x].YindexForZero;
+        cellList[XindexForZero + cell.asCell.Vec.x].roomList[tempIndexFromZero + cell.asCell.Vec.y] = cell;
     }
 
     public void Delete(DungeonRoom cell) 
     {
-        var tempIndexFromZero = cellList[XindexForZero + cell.asCell.x].YindexForZero;
-        cellList[XindexForZero + cell.asCell.x].roomList[tempIndexFromZero + cell.asCell.y] = null;
+        var tempIndexFromZero = cellList[XindexForZero + cell.asCell.Vec.x].YindexForZero;
+        cellList[XindexForZero + cell.asCell.Vec.x].roomList[tempIndexFromZero + cell.asCell.Vec.y] = null;
     }
 
     public DungeonRoom Find(Vector2Int cellLoc)
