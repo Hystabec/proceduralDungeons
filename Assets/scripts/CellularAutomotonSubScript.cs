@@ -155,7 +155,8 @@ public class CellularAutomotonSubScript : MonoBehaviour
                 NewScript.SetDepth(currentDepth + 1);
                 NewScript.GiveBaseScript(baseScript);
                 NewScript.SetGridLocation(nextVec);
-                NewScript.SetBranchVitality(currentBranchVitality - baseScript.GetBranchVitalityDecrease());
+                currentBranchVitality -= baseScript.GetBranchVitalityDecrease();
+                NewScript.SetBranchVitality(currentBranchVitality);
                 baseScript.AddToDictionary(nextVec, NewRoom);
                 baseScript.AddToListToRun(NewScript);
                 baseScript.SetLargestDepth(currentDepth + 1);
