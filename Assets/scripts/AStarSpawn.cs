@@ -327,7 +327,7 @@ public class AStarSpawn : MonoBehaviour
 
             //currentRoom is final room in path 
             //so path find from current room to half way between start of wander and end
-            int midIndex = (pathIndex + truePath.Count - 1) / 2;
+            int midIndex = (pathIndex) / 2;
 
             List<GridCell> pathBack = AstarPathFind(currentRoom.asCell, truePath[midIndex].asCell);
             var temp = sortedGrid.Find(new Vector2Int(pathBack[0].Vec.x, pathBack[0].Vec.y));
@@ -501,8 +501,6 @@ public class AStarSpawn : MonoBehaviour
 
         if (end.y > dungeonHeight)
             Debug.LogError("endGridCell.y(" + end.y + ") needs to be less than dungeon height(" + dungeonHeight + ")");
-
-
 
         GridCell startCell = FindCell(start);
         GridCell endCell = FindCell(end);
