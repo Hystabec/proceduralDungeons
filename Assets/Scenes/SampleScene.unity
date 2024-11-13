@@ -133,8 +133,8 @@ GameObject:
   m_Component:
   - component: {fileID: 28238238}
   - component: {fileID: 28238237}
-  - component: {fileID: 28238239}
   - component: {fileID: 28238240}
+  - component: {fileID: 28238239}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -220,11 +220,14 @@ MonoBehaviour:
   RandomEndCell: 1
   EnsureMinDepth: 1
   EnsureMaxDepth: 1
-  minDepth: 20
-  maxDepth: 100
+  minDepth: 5
+  maxDepth: 5
   roomPrefab: {fileID: 2783525562792059652, guid: 1ec2239248249034ca260847811a094c, type: 3}
   widthOfPrefab: 1
   heightOfPrefab: 1
+  wanderMaxChanceOfPlacingARoom: 0.8
+  WanderChanceDecreaseEachStep: 0.05
+  wanderAstarBackToPath: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

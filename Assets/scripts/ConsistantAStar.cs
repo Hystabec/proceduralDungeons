@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.VisualScripting;
+using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
 using UnityEngine.Experimental.AI;
 
@@ -15,6 +16,11 @@ public class ConsistantAStar : MonoBehaviour
     [SerializeField] int minDepth = 0, maxDepth = 0;
     [SerializeField] GameObject roomPrefab;
     [SerializeField] float widthOfPrefab, heightOfPrefab;
+
+
+    [SerializeField] float wanderMaxChanceOfPlacingARoom = 0.8f, WanderChanceDecreaseEachStep = 0.05f;
+    [SerializeField] bool wanderAstarBackToPath = true;
+
 
     List<DungeonRoom> placedRooms;
     List<GameObject> placedRoomsAsGameObjects;
@@ -182,10 +188,18 @@ public class ConsistantAStar : MonoBehaviour
             path.Add(tempCell);
         }
 
+        path.RemoveAt(0);
+        path.Reverse();
+
         return path;
     }
 
-    void Start()
+    void Wander(List<DungeonRoom> startOfWander, int startIndex)
+    {
+
+    }
+
+    void generateDungeon()
     {
         placedRooms = new List<DungeonRoom>();
         placedRoomsAsGameObjects = new();
@@ -209,6 +223,7 @@ public class ConsistantAStar : MonoBehaviour
         for (int i = 0; i < pathToEnd.Count; i++)
         {
             var newRoom = Instantiate(roomPrefab, pathToEnd[i].worldLocation, Quaternion.identity);
+            newRoom.name = "mainPath: " + i;
             placedRoomsAsGameObjects.Add(newRoom);
 
             DungeonRoom newDungeonRoom = new DungeonRoom(pathToEnd[i], newRoom);
@@ -217,6 +232,36 @@ public class ConsistantAStar : MonoBehaviour
             //opens doors in correct position for this and previous room (if there is a previous room)
         }
 
-        //drunk mans
+        //wander
+        for(int i = 1; i < placedRooms.Count-1;i++)
+        {
+            Wander(placedRooms, i);
+        }
+    }
+
+    void restDungeon()
+    {
+        foreach(var room in placedRoomsAsGameObjects)
+        {
+            Destroy(room);
+        }
+
+        placedRooms = new List<DungeonRoom>();
+        placedRoomsAsGameObjects = new();
+        gridAsDictionary = new();
+    }
+
+    void Start()
+    {
+        generateDungeon();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyUp(KeyCode.Space))
+        {
+            restDungeon();
+            generateDungeon();
+        }
     }
 }
