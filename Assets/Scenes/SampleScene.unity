@@ -148,7 +148,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 28238236}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5567c0dcaf7fe8d4c8463e7bba31a9eb, type: 3}
   m_Name: 
@@ -158,13 +158,18 @@ MonoBehaviour:
   startGridCell: {x: 20, y: 20}
   endGridCell: {x: 24, y: 24}
   RandomEndCell: 1
+  EnsureMinDepth: 1
+  EnsureMaxDepth: 1
+  minDepth: 2
+  maxDepth: 5
   roomPrefab: {fileID: 2783525562792059652, guid: 1ec2239248249034ca260847811a094c, type: 3}
   widthOfPrefab: 1
   heightOfPrefab: 1
   dungeonWidth: 40
   dungeonHeight: 40
   DM_MaxChanceOfPlacingARoom: 1
-  DM_ChanceDecrease: 0.01
+  DM_ChanceDecrease: 0.001
+  DM_AstarBackToPath: 1
 --- !u!4 &28238238
 Transform:
   m_ObjectHideFlags: 0
@@ -187,7 +192,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 28238236}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e86149d22fb0b464b9e834f3427e4dad, type: 3}
   m_Name: 

@@ -1,9 +1,11 @@
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 
@@ -21,6 +23,12 @@ public class AStarSpawn : MonoBehaviour
     [SerializeField]
     bool RandomEndCell = false;
 
+    //[SerializeField]
+    //bool EnsureMinDepth = false, EnsureMaxDepth = false;
+
+    //[SerializeField]
+    //int minDepth = 0, maxDepth = 0;
+
     [SerializeField]
     GameObject roomPrefab;
 
@@ -32,6 +40,9 @@ public class AStarSpawn : MonoBehaviour
 
     [SerializeField]
     float DM_MaxChanceOfPlacingARoom = 0.5f, DM_ChanceDecrease = 0.1f;
+
+    [SerializeField]
+    bool DM_AstarBackToPath = false;
 
     List<GridCell> dungeonCells;
     List<DungeonRoom> placedRooms = new();
@@ -212,7 +223,6 @@ public class AStarSpawn : MonoBehaviour
     void DrunkMans(List<DungeonRoom> truePath, int pathIndex)
     {
         DungeonRoom currentRoom = truePath[pathIndex];
-        bool loop = true;
         float PlaceChance = DM_MaxChanceOfPlacingARoom;
 
         List<DungeonRoom> thisPath = new()
@@ -220,16 +230,29 @@ public class AStarSpawn : MonoBehaviour
             truePath[pathIndex]
         };
 
-        while (loop)
+        bool passed = false;
+
+        int attemps = 30;
+        while (attemps > 0)
         {
+            attemps--;
+
+            bool lpass = passed;
+            passed = false;
+
             var ranNum = UnityEngine.Random.value;
 
-            //check if can place a room
-            if (ranNum > PlaceChance)
-                return; 
+            if (!lpass)
+            {
+                //check if can place a room
+                if (ranNum > PlaceChance)
+                {
+                    break;
+                }
 
-            PlaceChance -= DM_ChanceDecrease;
-            //find place direction
+                PlaceChance -= DM_ChanceDecrease;
+                //find place direction
+            }
 
             int dir = UnityEngine.Random.Range(0, 4);
 
@@ -259,6 +282,7 @@ public class AStarSpawn : MonoBehaviour
                 thisRooms.Add(newRoom);
 
                 newRoom.name = "DrunkMan's room";
+                //newRoom.transform.SetParent(truePath[pathIndex].asGameObject.transform);
 
                 var newCell = new GridCell
                 {
@@ -270,6 +294,7 @@ public class AStarSpawn : MonoBehaviour
                 var newDungeonRoom = new DungeonRoom(newCell, newRoom);
 
                 sortedGrid.Add(newDungeonRoom);
+                thisPath.Add(newDungeonRoom);
 
                 Vector3 Dir = (newDungeonRoom.asCell.worldLocation) - (currentRoom.asCell.worldLocation);
                 openRoomDoor(currentRoom.asGameObject, Dir);
@@ -287,9 +312,153 @@ public class AStarSpawn : MonoBehaviour
                 Dir = currentRoom.asCell.worldLocation - reRoom.asCell.worldLocation;
                 openRoomDoor(reRoom.asGameObject, Dir);
 
-                return;
+                if(thisPath.Contains(reRoom))
+                {
+                    passed = true;
+                }
+                else
+                    return;
             }
         }
+
+        if (DM_AstarBackToPath)
+        {
+            //final room wasnt place (didnt join back to main path)
+
+            //currentRoom is final room in path 
+            //so path find from current room to half way between start of wander and end
+            int midIndex = (pathIndex + truePath.Count - 1) / 2;
+
+            List<GridCell> pathBack = AstarPathFind(currentRoom.asCell, truePath[midIndex].asCell);
+            var temp = sortedGrid.Find(new Vector2Int(pathBack[0].Vec.x, pathBack[0].Vec.y));
+            GameObject par = temp.asGameObject;
+
+            //walk path while placing rooms - if room already exists open the door then stop
+            for (int i = 1; i < pathBack.Count-1; i++)
+            {
+                GridCell curr = pathBack[i];
+                DungeonRoom reRoom = sortedGrid.Find(new Vector2Int(curr.Vec.x, curr.Vec.y));
+                if (reRoom != null)
+                {
+                    //room already exsists open doors and end
+                    Vector3 Dir = reRoom.asCell.worldLocation - currentRoom.asCell.worldLocation;
+                    openRoomDoor(currentRoom.asGameObject, Dir);
+
+                    Dir = currentRoom.asCell.worldLocation - reRoom.asCell.worldLocation;
+                    openRoomDoor(reRoom.asGameObject, Dir);
+
+                    //return;
+                }
+                else
+                {
+                    //spawn room, open doors, set neighbours
+                    GameObject newRoom = Instantiate(roomPrefab, new Vector3((curr.Vec.x) * widthOfPrefab, (curr.Vec.y) * heightOfPrefab, currentRoom.asCell.worldLocation.z) - spawnOffset, quaternion.identity);
+                    thisRooms.Add(newRoom);
+
+                    newRoom.name = "DrunkMan's room - Astar back";
+                    //newRoom.gameObject.transform.SetParent(par.transform);
+
+                    curr.neighbours.Add(currentRoom.asCell);
+
+                    var newDungeonRoom = new DungeonRoom(curr, newRoom);
+
+                    sortedGrid.Add(newDungeonRoom);
+
+                    Vector3 Dir = (newDungeonRoom.asCell.worldLocation) - (currentRoom.asCell.worldLocation);
+                    openRoomDoor(currentRoom.asGameObject, Dir);
+
+                    Dir = (currentRoom.asCell.worldLocation) - newDungeonRoom.asCell.worldLocation;
+                    openRoomDoor(newDungeonRoom.asGameObject, Dir);
+
+                    currentRoom = newDungeonRoom;
+                }
+            }
+        }
+    }
+
+    List<GridCell> AstarPathFind(GridCell start, GridCell end)
+    {
+        ResetGrid();
+
+        prioQue openList = new();
+        HashSet<GridCell> visited = new();
+
+        GridCell pathEnd = null;
+
+        foreach (var neighbour in start.neighbours)
+        {
+            int g = EuclideanDistance(start, neighbour);
+            int h = EuclideanDistance(neighbour, end);
+
+            if (g + h < neighbour.GetCost())
+            {
+                neighbour.g = g;
+                neighbour.h = h;
+                neighbour.parent = start;
+            }
+
+            //piority queue
+            openList.Push(neighbour);
+        }
+
+        visited.Add(start);
+
+        while (!openList.Empty())
+        {
+            var current = openList.Top();
+
+            if (current.Vec.x == end.Vec.x && current.Vec.y == end.Vec.y)
+            {
+                pathEnd = current;
+                break;
+            }
+
+            foreach (var neighbour in current.neighbours)
+            {
+                //if in the visited set ignore
+                if (visited.Contains(neighbour))
+                    continue;
+
+                int g = (int)current.g + EuclideanDistance(current, neighbour);
+                int h = EuclideanDistance(neighbour, end);
+
+                if (g + h < neighbour.GetCost())
+                {
+                    neighbour.g = g;
+                    neighbour.h = h;
+                    neighbour.parent = current;
+                    openList.Push(neighbour);
+                }
+            }
+
+            visited.Add(current);
+
+            openList.Pop();
+        }
+
+        List<GridCell> path = new();
+
+        if (pathEnd != null)
+        {
+            var tempCell = pathEnd;
+
+            while (tempCell.parent != null)
+            {
+                path.Add(tempCell);
+                tempCell = tempCell.parent;
+            }
+
+            path.Add(tempCell);
+        }
+
+        return path;
+    }
+
+    int manhattenDistance(GridVector start, GridVector end)
+    {
+        int x = end.x - start.y;
+        int y = end.y - start.y;
+        return x + y;
     }
 
     void GenerateLayout()
@@ -301,7 +470,12 @@ public class AStarSpawn : MonoBehaviour
         if (!RandomEndCell)
             end = new GridVector(endGridCell.x, endGridCell.y);
         else
-            end = new GridVector(UnityEngine.Random.Range(0, dungeonWidth), UnityEngine.Random.Range(0, dungeonHeight));
+        {
+            int eX = UnityEngine.Random.Range(0, dungeonWidth); ;
+            int eY = UnityEngine.Random.Range(0, dungeonHeight);
+            
+            end = new GridVector(eX, eY);
+        }
 
         //check cells are in grid
         if(start.x < 0)
@@ -333,78 +507,7 @@ public class AStarSpawn : MonoBehaviour
         GridCell startCell = FindCell(start);
         GridCell endCell = FindCell(end);
 
-        ResetGrid();
-
-        prioQue openList = new();
-        HashSet<GridCell> visited = new();
-
-        GridCell pathEnd = null; 
-
-        foreach(var neighbour in startCell.neighbours)
-        {
-            int g = EuclideanDistance(startCell, neighbour);
-            int h = EuclideanDistance(neighbour, endCell);
-
-            if(g+h<neighbour.GetCost())
-            {
-                neighbour.g = g; 
-                neighbour.h = h;
-                neighbour.parent = startCell;
-            }
-
-            //piority queue
-            openList.Push(neighbour);
-        }
-
-        visited.Add(startCell);
-
-        while(!openList.Empty())
-        {
-            var current = openList.Top();
-
-            if(current.Vec.x == endCell.Vec.x && current.Vec.y == endCell.Vec.y)
-            {
-                pathEnd = current;
-                break;
-            }
-
-            foreach(var neighbour in current.neighbours)
-            {
-                //if in the visited set ignore
-                if (visited.Contains(neighbour))
-                    continue;
-
-                int g = (int)current.g + EuclideanDistance(current, neighbour);
-                int h = EuclideanDistance(neighbour, endCell);
-
-                if(g+h<neighbour.GetCost())
-                {
-                    neighbour.g = g;
-                    neighbour.h = h;
-                    neighbour.parent = current;
-                    openList.Push(neighbour);
-                }
-            }
-
-            visited.Add(current);
-
-            openList.Pop();
-        }
-
-        List<GridCell> path = new();
-
-        if(pathEnd != null)
-        {
-            var tempCell = pathEnd;
-
-            while(tempCell.parent != null)
-            {
-                path.Add(tempCell);
-                tempCell = tempCell.parent;
-            }
-
-            path.Add(tempCell);
-        }
+        List<GridCell> path = AstarPathFind(startCell, endCell);
 
         for(int index = 0; index < path.Count; index++)
         {
