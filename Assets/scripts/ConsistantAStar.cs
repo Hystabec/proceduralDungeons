@@ -6,6 +6,7 @@ using System.Reflection;
 using Unity.VisualScripting;
 using UnityEditor.ShaderKeywordFilter;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.Experimental.AI;
 
 public class ConsistantAStar : MonoBehaviour
@@ -24,6 +25,7 @@ public class ConsistantAStar : MonoBehaviour
 
     List<DungeonRoom> placedRooms;
     List<GameObject> placedRoomsAsGameObjects;
+    List<GridCell> takenCells;
     Dictionary<GridVector, GridCell> gridAsDictionary;
 
     GridVector GetRandomCellInRadius(int minDistance, int  maxDistance)
@@ -114,8 +116,21 @@ public class ConsistantAStar : MonoBehaviour
         return (int)Vector3.Distance(start.worldLocation, end.worldLocation);
     }
 
+    void resetGHParent()
+    {
+        foreach(var cell in gridAsDictionary)
+        {
+            cell.Value.g = int.MaxValue / 2;
+            cell.Value.h = int.MaxValue / 2;
+            cell.Value.parent = null;
+        }
+    }
+
     List<GridCell> pathFind(GridCell startCell, GridCell endCell)
     {
+        resetGHParent();
+        
+
         prioQue openList = new prioQue();
         HashSet<GridCell> visited = new();
         GridCell pathEnd = null;
@@ -194,9 +209,88 @@ public class ConsistantAStar : MonoBehaviour
         return path;
     }
 
-    void Wander(List<DungeonRoom> startOfWander, int startIndex)
+    void Wander(List<GridCell> startOfWanderList, int startIndex)
     {
+        GridCell currentCell = startOfWanderList[startIndex];
+        List<GridCell> wanderPath = new();
 
+        float currentChance = wanderMaxChanceOfPlacingARoom;
+        while (currentChance > 0)
+        {
+            //pick direction
+            int neighbourIndex = UnityEngine.Random.Range(0, currentCell.neighbours.Count);
+            
+            //if the next step goes into the main path - stop
+            if (startOfWanderList.Contains(currentCell.neighbours[neighbourIndex]))
+            {
+                //hit main path, stop
+                break;
+            }
+
+            //if its back into its self - try again but decrease chance
+            if (wanderPath.Contains(currentCell.neighbours[neighbourIndex]))
+            {
+                //hit part of this wander path, decrease chance carry on
+                currentChance -= WanderChanceDecreaseEachStep;
+                continue;
+            }
+
+            //if space isnt taken spawn new room
+            wanderPath.Add(currentCell.neighbours[neighbourIndex]);
+            currentCell = currentCell.neighbours[neighbourIndex];
+
+            currentChance -= WanderChanceDecreaseEachStep;
+        }
+
+        //once path ended - a star back to halfway between start and the end of the path
+        for (int i = 0; i < wanderPath.Count; i++)
+        {
+            if (takenCells.Contains(wanderPath[i]))
+            {
+                //open correct doors
+                continue;
+            }
+
+            takenCells.Add(wanderPath[i]);
+            var newRoom = Instantiate(roomPrefab, wanderPath[i].worldLocation, Quaternion.identity);
+            newRoom.name = "wanderRoom: " + startIndex + " : " + i;
+            placedRoomsAsGameObjects.Add(newRoom);
+
+            DungeonRoom newDungeonRoom = new DungeonRoom(wanderPath[i], newRoom);
+            placedRooms.Add(newDungeonRoom);
+
+            //opens doors in correct position for this and previous room (if there is a previous room)
+        }
+
+        if (wanderPath.Count == 0)
+            return;
+
+        if(wanderAstarBackToPath)
+        {
+            GridCell start = wanderPath[wanderPath.Count-1];
+            GridCell end = startOfWanderList[startIndex == startOfWanderList.Count - 2 ? startOfWanderList.Count-1 : (startIndex + (startOfWanderList.Count - 1)) / 2];
+
+            var pathBack = pathFind(start, end);
+
+            for (int i = 0; i < pathBack.Count; i++)
+            {
+                if (takenCells.Contains(pathBack[i]))
+                {
+                    //open correct doors
+                    continue;
+                }
+
+                takenCells.Add(pathBack[i]);
+                var newRoom = Instantiate(roomPrefab, pathBack[i].worldLocation, Quaternion.identity);
+                newRoom.name = "wanderRoomPathBack: " + startIndex + " : " + i;
+                placedRoomsAsGameObjects.Add(newRoom);
+
+                DungeonRoom newDungeonRoom = new DungeonRoom(pathBack[i], newRoom);
+                placedRooms.Add(newDungeonRoom);
+
+                //opens doors in correct position for this and previous room (if there is a previous room)
+            }
+        }
     }
 
     void generateDungeon()
@@ -204,9 +298,16 @@ public class ConsistantAStar : MonoBehaviour
         placedRooms = new List<DungeonRoom>();
         placedRoomsAsGameObjects = new();
         gridAsDictionary = new();
+        takenCells = new();
 
         GridVector startVec = new GridVector(0, 0);
-        GridVector endVec = GetRandomCellInRadius(EnsureMinDepth ? minDepth : 0, EnsureMaxDepth ? maxDepth : 255);
+
+        GridVector endVec;
+
+        if (RandomEndCell)
+            endVec = GetRandomCellInRadius(EnsureMinDepth ? minDepth : 0, EnsureMaxDepth ? maxDepth : 255);
+        else
+            endVec = new GridVector(endGridCell.x, endGridCell.y);
 
         GridCell startCell = new GridCell();
         startCell.Vec = startVec;
@@ -222,6 +323,7 @@ public class ConsistantAStar : MonoBehaviour
 
         for (int i = 0; i < pathToEnd.Count; i++)
         {
+            takenCells.Add(pathToEnd[i]);
             var newRoom = Instantiate(roomPrefab, pathToEnd[i].worldLocation, Quaternion.identity);
             newRoom.name = "mainPath: " + i;
             placedRoomsAsGameObjects.Add(newRoom);
@@ -233,9 +335,9 @@ public class ConsistantAStar : MonoBehaviour
         }
 
         //wander
-        for(int i = 1; i < placedRooms.Count-1;i++)
+        for(int i = 1; i < pathToEnd.Count-1;i++)
         {
-            Wander(placedRooms, i);
+            Wander(pathToEnd, i);
         }
     }
 

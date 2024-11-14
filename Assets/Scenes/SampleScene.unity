@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -220,12 +219,12 @@ MonoBehaviour:
   RandomEndCell: 1
   EnsureMinDepth: 1
   EnsureMaxDepth: 1
-  minDepth: 5
-  maxDepth: 5
+  minDepth: 15
+  maxDepth: 25
   roomPrefab: {fileID: 2783525562792059652, guid: 1ec2239248249034ca260847811a094c, type: 3}
   widthOfPrefab: 1
   heightOfPrefab: 1
-  wanderMaxChanceOfPlacingARoom: 0.8
+  wanderMaxChanceOfPlacingARoom: 0.5
   WanderChanceDecreaseEachStep: 0.05
   wanderAstarBackToPath: 1
 --- !u!1 &519420028
