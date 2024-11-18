@@ -28,6 +28,7 @@ public class ConsistantAStar : MonoBehaviour
     List<GridCell> takenCells;
     Dictionary<GridVector, GridCell> gridAsDictionary;
 
+    #region utilMethods
     GridVector GetRandomCellInRadius(int minDistance, int  maxDistance)
     {
         //this works on the idea that cells going diaganal is one step not two
@@ -125,6 +126,19 @@ public class ConsistantAStar : MonoBehaviour
             cell.Value.parent = null;
         }
     }
+
+    void restDungeon()
+    {
+        foreach (var room in placedRoomsAsGameObjects)
+        {
+            Destroy(room);
+        }
+
+        placedRooms = new List<DungeonRoom>();
+        placedRoomsAsGameObjects = new();
+        gridAsDictionary = new();
+    }
+    #endregion
 
     List<GridCell> pathFind(GridCell startCell, GridCell endCell)
     {
@@ -339,18 +353,6 @@ public class ConsistantAStar : MonoBehaviour
         {
             Wander(pathToEnd, i);
         }
-    }
-
-    void restDungeon()
-    {
-        foreach(var room in placedRoomsAsGameObjects)
-        {
-            Destroy(room);
-        }
-
-        placedRooms = new List<DungeonRoom>();
-        placedRoomsAsGameObjects = new();
-        gridAsDictionary = new();
     }
 
     void Start()
